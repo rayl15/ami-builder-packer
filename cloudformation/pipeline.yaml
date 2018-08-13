@@ -6,10 +6,21 @@ Parameters:
         Default: AMI-Builder
         Description: Name for this service; used in the code repository and pipeline names
 
-    CodeBuildEnvironment:
+    GitHubRepo:
         Type: String
-        Default: "eb-python-2.6-amazonlinux-64:2.1.6"
-        Description: Docker image to use for CodeBuild container - Use http://amzn.to/2mjCI91 for reference
+        Description: example dealer-extension do not use username with reponame.
+
+    GitHubBranch:
+        Type: String
+        Description: example dev
+
+    GitHubToken:
+        Type: String
+        NoEcho: true
+
+    GitHubUser:
+        Type: String
+
 
     BuilderVPC:
         Type: AWS::EC2::VPC::Id
@@ -231,12 +242,14 @@ Resources:
                       Name: CodeCommitRepo
                       ActionTypeId:
                         Category: Source
-                        Owner: AWS
-                        Provider: CodeCommit
+                        Owner: ThirdParty
+                        Provider: GitHub
                         Version: 1
                       Configuration:
-                        RepositoryName: !Sub '${ServiceName}_repo'
-                        BranchName: master
+                        Owner: !Ref GitHubUser
+                        Repo: !Ref GitHubRepo
+                        Branch: !Ref GitHubBranch
+                        OAuthToken: !Ref GitHubToken
                       OutputArtifacts:
                         - Name: SourceZip
                       RunOrder: 1
@@ -268,7 +281,7 @@ Resources:
               - 
                 Endpoint: !Ref NotificationEmailAddress
                 Protocol: "email"
-            TopicName: "AmiBuilder-Notify"
+            TopicName: !Sub AmiBuilder-Notify-${ServiceName}
 
     AmiBuilderNotificationTopicPolicy:
       Type: AWS::SNS::TopicPolicy
